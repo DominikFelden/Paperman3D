@@ -42,3 +42,27 @@ body {
   font-size: 12px;
   opacity: 0.8;
 }
+
+#debug-controls {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 13px;
+}
+
+#debug-controls input {
+  width: 56px;
+}
+
+#debug-controls button {
+  cursor: pointer;
+}

@@ -60,5 +60,11 @@ describe('PseudoPhysicsWorld friction on collision', () => {
             expect(Number.isFinite(speed)).toBe(true)
             expect(speed).toBeLessThanOrEqual(world.maxVelocity * Math.sqrt(3) + 1e-6)
         }
+
+        // Regression guard: a bad terrain-intersection hit (t > 1 along this step's displacement)
+        // previously caused a sudden multi-fold speed spike instead of a smooth slide/slow-down.
+        for (let i = 1; i < speeds.length; i++) {
+            expect(speeds[i]).toBeLessThanOrEqual(speeds[i - 1] + 0.02)
+        }
     })
 })

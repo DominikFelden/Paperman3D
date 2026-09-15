@@ -12,6 +12,13 @@
       <div class="title">paperman-3d</div>
       <div class="hint">Drag to orbit • Scroll to zoom</div>
     </div>
+    <!-- Temporary physics debug controls, remove once collision behavior is finalized -->
+    <div id="debug-controls">
+      <label for="step-count">Steps</label>
+      <input id="step-count" type="number" min="1" value="1" />
+      <button id="step-btn" type="button">Step</button>
+      <button id="go-btn" type="button">Go</button>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

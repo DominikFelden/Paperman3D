@@ -7,18 +7,19 @@ export class DebugVector {
     private cylinderMesh: THREE.Mesh
     private coneMesh: THREE.Mesh
     
-    constructor(ankerPoint: Vector, direction: Vector, color: number) {
+    constructor(ankerPoint: Vector, direction: Vector, color: number, options: { cylinderRadius?: number, lengthScale?: number } = {}) {
         this.group = new THREE.Group()
         
         // Calculate the length of the direction vector
-        const length = magnitude(direction)
+        // lengthScale lets callers stretch tiny vectors (e.g. per-step velocity) to a visible size without affecting the underlying data
+        const length = magnitude(direction) * (options.lengthScale ?? 1)
         
         if (length === 0) {
             throw new Error('Direction vector cannot have zero length')
         }
         
         // Proportions for the arrow
-        const cylinderRadius = 0.05
+        const cylinderRadius = options.cylinderRadius ?? 0.05
         const coneLength = length * 0.15
         const cylinderLength = length - coneLength
         const coneRadius = cylinderRadius * 3

@@ -68,6 +68,25 @@ const particle1 = new Particle(
 
 const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1], scene, true)
 
+// --- Temporary physics debug controls, remove once collision behavior is finalized ---
+const stepCountInput = document.querySelector<HTMLInputElement>('#step-count')
+const stepButton = document.querySelector<HTMLButtonElement>('#step-btn')
+const goButton = document.querySelector<HTMLButtonElement>('#go-btn')
+
+let running = false
+
+stepButton?.addEventListener('click', () => {
+  const steps = Math.max(1, Math.floor(Number(stepCountInput?.value)) || 1)
+  for (let i = 0; i < steps; i++) {
+    physicsWorld.step()
+  }
+})
+
+goButton?.addEventListener('click', () => {
+  running = !running
+  goButton.textContent = running ? 'Stop' : 'Go'
+})
+
 
 function resize() {
   const width = canvas.clientWidth
@@ -86,7 +105,9 @@ function animate() {
   controls.update()
   renderer.render(scene, camera)
 
-  physicsWorld.step()
+  if (running) {
+    physicsWorld.step()
+  }
 
   requestAnimationFrame(animate)
 

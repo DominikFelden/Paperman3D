@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Vector } from './math'
-import { calculateIntersectionTriangleLine } from './math'
+import { calculateIntersectionTriangleLine, skalarprodukt } from './math'
 import { Triangle } from './triangle'
 import { DebugVector } from './debug-vector'
 
@@ -158,6 +158,12 @@ export class Terrain {
         let closestTriangle: Triangle | null = null
         let closestDistSq = Infinity
 
+        // calculateIntersectionTriangleLine treats lineDirection as an infinite ray (only t >= 0 is
+        // rejected), but here it represents this frame's finite displacement — a hit beyond it (t > 1)
+        // belongs to a future step, not this one, so it must be excluded to avoid phantom far-away contacts.
+        const segmentLenSq = skalarprodukt(lineDirection, lineDirection)
+        const eps = 1e-9
+
         for (const triangle of candidateTriangles) {
             const pt = calculateIntersectionTriangleLine(triangle, linePoint, lineDirection)
             if (pt) {
@@ -165,6 +171,7 @@ export class Terrain {
                 const ey = pt.y - linePoint.y
                 const ez = pt.z - linePoint.z
                 const distSq = ex * ex + ey * ey + ez * ez
+                if (distSq > segmentLenSq + eps) continue // beyond this step's displacement (t > 1)
                 if (distSq < closestDistSq) {
                     closestDistSq = distSq
                     closestPoint = pt
