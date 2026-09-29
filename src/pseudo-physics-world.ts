@@ -2,15 +2,17 @@ import { add, magnitude, projectVectorOntoPlane, scaleVector, subtract, type Vec
 import type { Particle } from "./particle";
 import type { Terrain } from "./terrain";
 import type { Scene } from "three";
+import type { PapermanBone } from "./bone";
 import { DebugVector } from "./debug-vector";
 
 export class PseudoPhysicsWorld {
     // physical constants
-    gravityVector = { x: 0, y: -0.000981, z: 0 }; // Gravity vector (m/s^2)
+    gravityVector = { x: 0, y: -0.0981, z: 0 }; // Gravity vector (m/s^2)
     maxVelocity = 0.1; // Maximum allowed velocity for particles (m/s)
     // objects
     terrain: Terrain;
     particles: Particle[] = [];
+    bones: PapermanBone[] = [];
     friction: number = 0.1; // Coefficient of friction for particles on the terrain
     // cylinders: Cylinder[] = [];
     // boxes: Box[] = [];
@@ -20,25 +22,26 @@ export class PseudoPhysicsWorld {
     private debug: boolean;
     private velocityVectors = new Map<Particle, DebugVector>(); // tracks per-particle debug arrows so they can be replaced each frame
 
-    constructor(terrain: Terrain, particles: Particle[] = [], scene?: Scene, debug: boolean = false) {
+    constructor(terrain: Terrain, particles: Particle[] = [], bones: PapermanBone[] = [], scene?: Scene, debug: boolean = false) {
         this.terrain = terrain;
         this.particles = particles;
+        this.bones = bones;
         this.scene = scene;
         this.debug = debug;
     }
 
     step() {
-        if(this.debug) console.log('\n New Step:')
+        // if(this.debug) console.log('\n New Step:')
         // Update particle positions based on their velocities and collisions
         for (const particle of this.particles) {
             const oldPosition = particle.position;
 
             // Simple physics integration (e.g., Euler method)
-            let velocity = subtract(particle.position, particle.lastPosition);
-            velocity = this.controlMaxVelocity(velocity);
-            const fullDisplacement = add(velocity, this.gravityVector);
+            const velocity = subtract(particle.position, particle.lastPosition);
+            let fullDisplacement = add(velocity, this.gravityVector);
+            fullDisplacement = this.controlMaxVelocity(fullDisplacement);
 
-            if(this.debug) console.log(`Full displacement for particle: ${JSON.stringify(fullDisplacement)} and Full displacement magnitude: ${magnitude(fullDisplacement)}`)
+            // if(this.debug) console.log(`Full displacement for particle: ${JSON.stringify(fullDisplacement)} and Full displacement magnitude: ${magnitude(fullDisplacement)}`)
 
 
             let newPosition = add(particle.position, fullDisplacement);
@@ -47,7 +50,7 @@ export class PseudoPhysicsWorld {
             if (this.terrain.detectPointBelowTerrain(newPosition)) {
                 const intersection = this.terrain.getLineTerrainIntersection(particle.position, fullDisplacement);
                 if (intersection) {
-                    if(this.debug) console.log(`Intersection with Triangle detected`)
+                    // if(this.debug) console.log(`Intersection with Triangle detected`)
                     // When there is an intersection the particle should move to the intersection point
                     // and after that it should move with the remaining displacement along the triangle surface
                     const remainingDisplacement = subtract(fullDisplacement, subtract(intersection.point, particle.position));
@@ -67,12 +70,20 @@ export class PseudoPhysicsWorld {
 
             particle.setPosition(newPosition);
 
-            if(this.debug ) console.log(`Particle moved from ${JSON.stringify(oldPosition)} to ${JSON.stringify(newPosition)}`)
+            // if(this.debug ) console.log(`Particle moved from ${JSON.stringify(oldPosition)} to ${JSON.stringify(newPosition)}`)
+
+            
+
 
 
             if (this.debug && this.scene) {
                 this.updateVelocityDebugVector(particle, subtract(particle.position, oldPosition));
             }
+        }
+
+        // now that all particle positions have been updated for this step we still need to update all the bones
+        for (const bone of this.bones) {
+            bone.update();
         }
     }
 

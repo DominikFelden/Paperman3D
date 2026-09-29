@@ -1,17 +1,17 @@
 import * as THREE from 'three'
-import { magnitude } from './math'
+import { add, magnitude, normalize, scaleVector, subtract } from './math'
 import type { Particle } from './particle'
 
-export class Bone {
+export class PapermanBone {
     particle1: Particle
     particle2: Particle
     length: number
     private mesh: THREE.Mesh | null = null
 
-    constructor(particle1: Particle, particle2: Particle, length: number, scene: THREE.Scene, debug: boolean = false) {
+    constructor(particle1: Particle, particle2: Particle,  scene: THREE.Scene, debug: boolean = false) {
         this.particle1 = particle1
         this.particle2 = particle2
-        this.length = length
+        this.length = magnitude(subtract(particle1.position, particle2.position))
 
         if (debug) {
             const p1 = particle1.position
@@ -47,6 +47,18 @@ export class Bone {
     }
 
     update(): void {
+
+        // a bone should always have constant length even if the particles move
+        // so here we correct the particle positions to maintain the bone's length
+        const sub = subtract(this.particle1.position, this.particle2.position)
+        const currentLength = magnitude(sub)
+        const correction = (currentLength - this.length) / 2
+        const norm = normalize(sub)
+        this.particle1.setPosition(add(this.particle1.position, scaleVector(norm, -correction)))
+        this.particle2.setPosition(add(this.particle2.position, scaleVector(norm, correction)))
+
+        // there is only a mesh in debug mode 
+        // if not debug mode all the following will be skipped
         if (!this.mesh) return
 
         const p1 = this.particle1.position

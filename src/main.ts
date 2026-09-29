@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Terrain } from './terrain'
 import { loadHeightmap } from './utils'
 import { Particle } from './particle'
-import { Bone } from './bone'
+import { PapermanBone } from './bone'
 import { subtract } from './math'
 import { PseudoPhysicsWorld } from './pseudo-physics-world'
 
@@ -47,26 +47,16 @@ const particle1 = new Particle(
     true
 )
 
-// const particle2 = new Particle(
-//     { x: -2, y: 3, z: -1 },
-//     { x: -1, y: 3, z: -1 },
-//     scene,
-//     true
-// )
+const particle2 = new Particle(
+    { x: -2.5, y: 3, z: -1 },
+    { x: -1, y: 3, z: -1 },
+    scene,
+    true
+)
 
-// const intersectionPoint = terrain.getLineTerrainIntersection(particle1.position, subtract(particle1.position, particle2.position))
+const bone = new PapermanBone(particle1, particle2, scene, true)
 
-// const particle3 = new Particle(
-//     intersectionPoint || { x: 0, y: 0, z: 0 },
-//     intersectionPoint || { x: 0, y: 0, z: 0 },
-    
-//     scene,
-//     true
-// )
-
-// const bone = new Bone(particle1, particle2, 4, scene, true)
-
-const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1], scene, true)
+const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1], [bone], scene, true)
 
 // --- Temporary physics debug controls, remove once collision behavior is finalized ---
 const stepCountInput = document.querySelector<HTMLInputElement>('#step-count')
