@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-import type { Vector } from './math'
-import { calculateIntersectionTriangleLine, skalarprodukt } from './math'
-import { Triangle } from './triangle'
-import { DebugVector } from './debug-vector'
+import type { Vector } from '../math/operations'
+import { calculateIntersectionTriangleLine, skalarprodukt } from '../math/operations'
+import { Triangle } from '../math/triangle'
+import { DebugVector } from '../debug-vector'
 
 export class Terrain {
     hightmap: number[][]                              // [terrainX-idx][terrainY-idx] → world Y height; outer index = world X axis, inner = local Y axis (= world −Z)

@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-import type { Vector } from './math'
-import { subtract, magnitude } from './math'
-import { DebugVector } from './debug-vector'
-import { GLOBAL_DEBUG, TRAIL_MAX_LENGTH } from './debug-config'
+import type { Vector } from '../math/operations'
+import { subtract, magnitude } from '../math/operations'
+import { DebugVector } from '../debug-vector'
+import { GLOBAL_DEBUG, TRAIL_MAX_LENGTH } from '../debug-config'
 
 // Shared across all particles so enabling the trail doesn't allocate a new geometry/material every step.
 const trailMarkerGeometry = new THREE.SphereGeometry(0.02, 8, 8)

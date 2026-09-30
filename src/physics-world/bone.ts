@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { add, magnitude, normalize, scaleVector, subtract } from './math'
+import { add, magnitude, normalize, scaleVector, subtract } from '../math/operations'
 import type { Particle } from './particle'
 
 export class PapermanBone {

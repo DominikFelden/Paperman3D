@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as THREE from 'three'
-import { magnitude, subtract } from './math'
+import { magnitude, subtract } from '../math/operations'
 import { Terrain } from './terrain'
 import { Particle } from './particle'
 import { PseudoPhysicsWorld } from './pseudo-physics-world'

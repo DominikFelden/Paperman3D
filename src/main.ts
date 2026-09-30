@@ -1,12 +1,12 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { Terrain } from './terrain'
+import { Terrain } from './physics-world/terrain'
 import { loadHeightmap } from './utils'
-import { Particle } from './particle'
-import { PapermanBone } from './bone'
-import { subtract } from './math'
-import { PseudoPhysicsWorld } from './pseudo-physics-world'
+import { Particle } from './physics-world/particle'
+import { PapermanBone } from './physics-world/bone'
+import { subtract } from './math/operations'
+import { PseudoPhysicsWorld } from './physics-world/pseudo-physics-world'
 
 const canvasQuery = document.querySelector<HTMLCanvasElement>('#scene')
 if (!canvasQuery) throw new Error('Missing <canvas id="scene">')
@@ -56,7 +56,7 @@ const particle2 = new Particle(
 
 const bone = new PapermanBone(particle1, particle2, scene, true)
 
-const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1], [bone], scene, true)
+const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1, particle2], [bone], scene, true)
 
 // --- Temporary physics debug controls, remove once collision behavior is finalized ---
 const stepCountInput = document.querySelector<HTMLInputElement>('#step-count')

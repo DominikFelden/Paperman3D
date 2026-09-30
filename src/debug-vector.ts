@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import type { Vector } from "./math"
-import { magnitude } from "./math"
+import type { Vector } from "./math/operations"
+import { magnitude } from "./math/operations"
 
 export class DebugVector {
     private group: THREE.Group

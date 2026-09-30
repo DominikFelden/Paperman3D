@@ -1,4 +1,4 @@
-import { crossProduct, normalize, type Vector } from "./math";
+import { crossProduct, normalize, type Vector } from "./operations";
 
 export class Triangle {
     ankerPoint: Vector;

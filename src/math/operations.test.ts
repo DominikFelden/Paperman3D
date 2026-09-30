@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateIntersectionPlaneLine } from './math'
+import { calculateIntersectionPlaneLine } from './operations'
 
 describe('calculateIntersectionPlaneLine', () => {
     it('intersects a horizontal plane (XZ) with a vertical line', () => {

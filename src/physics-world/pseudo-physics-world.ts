@@ -1,9 +1,9 @@
-import { add, magnitude, projectVectorOntoPlane, scaleVector, subtract, type Vector } from "./math";
+import { add, magnitude, projectVectorOntoPlane, scaleVector, subtract, type Vector } from "../math/operations";
 import type { Particle } from "./particle";
 import type { Terrain } from "./terrain";
 import type { Scene } from "three";
 import type { PapermanBone } from "./bone";
-import { DebugVector } from "./debug-vector";
+import { DebugVector } from "../debug-vector";
 
 export class PseudoPhysicsWorld {
     // physical constants
