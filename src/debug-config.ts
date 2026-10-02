@@ -3,4 +3,5 @@
 export const GLOBAL_DEBUG = true
 
 // Caps how many trail markers/vectors a particle keeps, so long debug sessions don't leak meshes.
+export const ENABLE_TRAILS = false
 export const TRAIL_MAX_LENGTH = 200

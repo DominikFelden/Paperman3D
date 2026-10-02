@@ -7,13 +7,13 @@ import { DebugVector } from "../debug-vector";
 
 export class PseudoPhysicsWorld {
     // physical constants
-    gravityVector = { x: 0, y: -0.0981, z: 0 }; // Gravity vector (m/s^2)
+    gravityVector = { x: 0, y: -0.0481, z: 0 }; // Gravity vector (m/s^2)
     maxVelocity = 0.1; // Maximum allowed velocity for particles (m/s)
     // objects
     terrain: Terrain;
     particles: Particle[] = [];
     bones: PapermanBone[] = [];
-    friction: number = 0.1; // Coefficient of friction for particles on the terrain
+    friction: number = 0.05; // Coefficient of friction for particles on the terrain
     // cylinders: Cylinder[] = [];
     // boxes: Box[] = [];
     // spheres: Sphere[] = [];

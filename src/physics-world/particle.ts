@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { Vector } from '../math/operations'
 import { subtract, magnitude } from '../math/operations'
 import { DebugVector } from '../debug-vector'
-import { GLOBAL_DEBUG, TRAIL_MAX_LENGTH } from '../debug-config'
+import { GLOBAL_DEBUG, TRAIL_MAX_LENGTH, ENABLE_TRAILS } from '../debug-config'
 
 // Shared across all particles so enabling the trail doesn't allocate a new geometry/material every step.
 const trailMarkerGeometry = new THREE.SphereGeometry(0.02, 8, 8)
@@ -39,7 +39,7 @@ export class Particle {
         }
 
         // Trail of past positions + per-step velocity vectors; the check keeps this a no-op when debugging is off.
-        if (GLOBAL_DEBUG) {
+        if (GLOBAL_DEBUG && ENABLE_TRAILS) {
             this.recordTrailPoint(previousPosition, subtract(position, previousPosition))
         }
     }
