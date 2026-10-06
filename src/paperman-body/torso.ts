@@ -1,8 +1,7 @@
 import { GLOBAL_DEBUG } from "../debug-config";
-import  { PapermanBone } from "../physics-world/bone";
-import  { Particle } from "../physics-world/particle";
-import * as THREE from 'three'
-
+import { PapermanBone } from "../physics-world/bone";
+import { Particle } from "../physics-world/particle";
+import * as THREE from "three";
 
 export class PapermanTorso {
     shoulderLeftLower: Particle;
@@ -19,8 +18,14 @@ export class PapermanTorso {
 
     scene: THREE.Scene;
 
-    constructor(particles: { shoulderLeftLower: Particle; shoulderRightLower: Particle; waistLeft: Particle; waistRight: Particle; },
-        scene: THREE.Scene
+    constructor(
+        particles: {
+            shoulderLeftLower: Particle;
+            shoulderRightLower: Particle;
+            waistLeft: Particle;
+            waistRight: Particle;
+        },
+        scene: THREE.Scene,
     ) {
         this.scene = scene;
 
@@ -30,13 +35,42 @@ export class PapermanTorso {
         this.waistLeft = particles.waistLeft;
         this.waistRight = particles.waistRight;
 
-        this.lowerShoulderConnection = new PapermanBone(this.shoulderLeftLower, this.shoulderRightLower, this.scene, GLOBAL_DEBUG);
-        this.lowerShoulderToWaistLeft = new PapermanBone(this.shoulderLeftLower, this.waistLeft, this.scene, GLOBAL_DEBUG);
-        this.lowerShoulderToWaistRight = new PapermanBone(this.shoulderRightLower, this.waistRight, this.scene, GLOBAL_DEBUG);
-        this.waistConnection = new PapermanBone(this.waistLeft, this.waistRight, this.scene, GLOBAL_DEBUG);
-        this.stabeliserleftShoulderToWaistRight = new PapermanBone(this.shoulderLeftLower, this.waistRight, this.scene, GLOBAL_DEBUG);
-        this.stabeliserrightShoulderToWaistLeft = new PapermanBone(this.shoulderRightLower, this.waistLeft, this.scene, GLOBAL_DEBUG);
-
+        this.lowerShoulderConnection = new PapermanBone(
+            this.shoulderLeftLower,
+            this.shoulderRightLower,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
+        this.lowerShoulderToWaistLeft = new PapermanBone(
+            this.shoulderLeftLower,
+            this.waistLeft,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
+        this.lowerShoulderToWaistRight = new PapermanBone(
+            this.shoulderRightLower,
+            this.waistRight,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
+        this.waistConnection = new PapermanBone(
+            this.waistLeft,
+            this.waistRight,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
+        this.stabeliserleftShoulderToWaistRight = new PapermanBone(
+            this.shoulderLeftLower,
+            this.waistRight,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
+        this.stabeliserrightShoulderToWaistLeft = new PapermanBone(
+            this.shoulderRightLower,
+            this.waistLeft,
+            this.scene,
+            GLOBAL_DEBUG,
+        );
     }
 
     getParticles() {
@@ -46,7 +80,7 @@ export class PapermanTorso {
             waistLeft: this.waistLeft,
             waistRight: this.waistRight,
         };
-    };
+    }
 
     getBones() {
         return {
