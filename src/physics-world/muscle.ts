@@ -7,6 +7,9 @@ export class PapermanMuscle extends PapermanBone {
     allowedCompression: number = 0.1; // Maximum allowed compression relative to the original length
     allowedExtension: number = 0.1; // Maximum allowed extension relative to the original length
     maxDeltaLength: number;
+    protected override get colorDebugMode(): number {
+        return 0x990000;
+    }
 
     constructor(
         particle1: Particle,

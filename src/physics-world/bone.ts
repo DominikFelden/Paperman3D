@@ -7,6 +7,10 @@ export class PapermanBone {
     particle2: Particle;
     length: number;
     private mesh: THREE.Mesh | null = null;
+    // getter instead of field so subclasses can override it before the base constructor builds the mesh
+    protected get colorDebugMode(): number {
+        return 0x44aaff;
+    }
 
     constructor(
         particle1: Particle,
@@ -29,9 +33,9 @@ export class PapermanBone {
             };
             const dist = magnitude(dir);
 
-            const geometry = new THREE.CylinderGeometry(0.03, 0.03, dist, 8);
+            const geometry = new THREE.CylinderGeometry(0.01, 0.01, dist, 8);
             const material = new THREE.MeshStandardMaterial({
-                color: 0x44aaff,
+                color: this.colorDebugMode,
                 roughness: 0.5,
                 metalness: 0.1,
             });

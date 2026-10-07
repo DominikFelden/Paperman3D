@@ -8,6 +8,7 @@ import { PapermanBone } from "./physics-world/bone";
 import { subtract } from "./math/operations";
 import { PseudoPhysicsWorld } from "./physics-world/pseudo-physics-world";
 import { PapermanTorso } from "./paperman-body/torso";
+import { PapermanBody } from "./paperman-body/body";
 
 const canvasQuery = document.querySelector<HTMLCanvasElement>("#scene");
 if (!canvasQuery) throw new Error('Missing <canvas id="scene">');
@@ -17,7 +18,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b1020);
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
-camera.position.set(2.5, 5, 5);
+camera.position.set(-1, 3, 3);
 
 const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -41,47 +42,17 @@ const heightmap = await loadHeightmap("/heightmap2.png");
 
 const terrain = new Terrain(10, heightmap, scene, false); // Enable debug mode
 
-// const particle1 = new Particle(
-//     { x: -2, y: 3, z: -1 },
-//     { x: -2.04, y: 2.99, z: -1 },
-//     scene,
-//     true
-// )
-
-// const particle2 = new Particle(
-//     { x: -2.5, y: 3, z: -1 },
-//     { x: -1, y: 3, z: -1 },
-//     scene,
-//     true
-// )
-
-// const bone = new PapermanBone(particle1, particle2, scene, true)
-
-// const physicsWorld = new PseudoPhysicsWorld(terrain, [particle1, particle2], [bone], scene, true)
-
-const torso = new PapermanTorso(
-    {
-        shoulderLeftLower: new Particle(
-            { x: -0.5, y: 3, z: 2.1 },
-            { x: -0.5, y: 3, z: 2.1 },
-            scene,
-            true,
-        ),
-        shoulderRightLower: new Particle(
-            { x: 0.5, y: 3, z: 2.1 },
-            { x: 0.5, y: 3, z: 2.1 },
-            scene,
-            true,
-        ),
-        waistLeft: new Particle({ x: -0.4, y: 2, z: 2 }, { x: -0.4, y: 2, z: 2 }, scene, true),
-        waistRight: new Particle({ x: 0.4, y: 1.5, z: 2 }, { x: 0.4, y: 1.5, z: 2 }, scene, true),
-    },
+const body = new PapermanBody(
+    { x: 0, y: 3, z: 0 },
+    0,
     scene,
+    true
 );
+
 const physicsWorld = new PseudoPhysicsWorld(
     terrain,
-    Object.values(torso.getParticles()),
-    Object.values(torso.getBones()),
+    Object.values(body.getParticles()),
+    [...Object.values(body.getBones()), ...Object.values(body.getMuscles())],
     scene,
     true,
 );
