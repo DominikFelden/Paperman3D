@@ -9,5 +9,12 @@ export const defaultBodyData = {
         neckUpperRight: { x: 0.05, y: 1.75, z: 0 },
         neckLowerLeft: { x: -0.05, y: 1.7, z: 0 },
         neckLowerRight: { x: 0.05, y: 1.7, z: 0 },
+    },
+    torso: {
+        leftShoulder: { x: -0.2, y: 1.6, z: 0 },
+        rightShoulder: { x: 0.2, y: 1.6, z: 0 },
+        leftWaist: { x: -0.15, y: 1.2, z: 0 },
+        rightWaist: { x: 0.15, y: 1.2, z: 0 },
+
     }
 }

@@ -2,12 +2,14 @@ import type { Vector } from "../math/operations";
 import { getZeroVelocityParticle } from "../physics-world/particle";
 import { defaultBodyData } from "./body-default-data";
 import { PapermanHead } from "./head";
+import { PapermanTorso } from "./torso";
 import * as THREE from "three";
 
 export class PapermanBody {
     anchorPoint: Vector;
     yRotation: number;
     head: PapermanHead;
+    torso: PapermanTorso;
     scene: THREE.Scene;
     debug: boolean;
     constructor(anchorPoint: Vector, yRotation: number, scene: THREE.Scene, debug: boolean) {
@@ -27,10 +29,17 @@ export class PapermanBody {
             getZeroVelocityParticle(defaultBodyData.head.neckLowerRight, scene, debug),
             scene,
         );
+        this.torso = new PapermanTorso(
+            getZeroVelocityParticle(defaultBodyData.torso.leftShoulder, scene, debug),
+            getZeroVelocityParticle(defaultBodyData.torso.rightShoulder, scene, debug),
+            getZeroVelocityParticle(defaultBodyData.torso.leftWaist, scene, debug),
+            getZeroVelocityParticle(defaultBodyData.torso.rightWaist, scene, debug),
+            scene,
+        );
     }
 
     getParticles() {
-        return this.head.getParticles();
+        return [...this.head.getParticles(), ...Object.values(this.torso.getParticles())];
     }
 
     getBones() {
