@@ -11,10 +11,15 @@ export const defaultBodyData = {
         neckLowerRight: { x: 0.05, y: 1.7, z: 0 },
     },
     torso: {
-        leftShoulder: { x: -0.2, y: 1.6, z: 0 },
-        rightShoulder: { x: 0.2, y: 1.6, z: 0 },
-        leftWaist: { x: -0.15, y: 1.2, z: 0 },
-        rightWaist: { x: 0.15, y: 1.2, z: 0 },
-
-    }
-}
+        leftShoulderUpper: { x: -0.2, y: 1.65, z: -0.05 },
+        rightShoulderUpper: { x: 0.2, y: 1.65, z: -0.05 },
+        leftShoulderLower: { x: -0.2, y: 1.55, z: -0.111 },
+        rightShoulderLower: { x: 0.2, y: 1.55, z: -0.111 },
+        leftWaist: { x: -0.15, y: 1.3, z: -0.2 },
+        rightWaist: { x: 0.15, y: 1.3, z: -0.2 },
+        hipLeftOuter: { x: -0.16, y: 1.0, z: 0 },
+        hipLeftInner: { x: -0.05, y: 1.0, z: 0 },
+        hipRightOuter: { x: 0.16, y: 1.0, z: 0 },
+        hipRightInner: { x: 0.05, y: 1.0, z: 0 },
+    },
+};

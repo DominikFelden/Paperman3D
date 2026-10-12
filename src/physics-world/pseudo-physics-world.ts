@@ -14,7 +14,7 @@ import { DebugVector } from "../debug-vector";
 
 export class PseudoPhysicsWorld {
     // physical constants
-    gravityVector = { x: 0, y: -0.00281, z: 0 }; // Gravity vector (m/s^2)
+    gravityVector = { x: 0, y: -0.00481, z: 0 }; // Gravity vector (m/s^2)
     maxVelocity = 0.1; // Maximum allowed velocity for particles (m/s)
     // objects
     terrain: Terrain;
@@ -29,7 +29,7 @@ export class PseudoPhysicsWorld {
     private debug: boolean;
     private velocityVectors = new Map<Particle, DebugVector>(); // tracks per-particle debug arrows so they can be replaced each frame
 
-    private amountBoneUpdateLoops = 5; // Number of times to update bones per physics step
+    private amountBoneUpdateLoops = 10; // Number of times to update bones per physics step
 
     constructor(
         terrain: Terrain,
