@@ -29,7 +29,7 @@ export class PseudoPhysicsWorld {
     private debug: boolean;
     private velocityVectors = new Map<Particle, DebugVector>(); // tracks per-particle debug arrows so they can be replaced each frame
 
-    private amountBoneUpdateLoops = 50; // Number of times to update bones per physics step
+    private amountBoneUpdateLoops = 5; // Number of times to update bones per physics step
 
     constructor(
         terrain: Terrain,

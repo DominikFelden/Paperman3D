@@ -9,6 +9,8 @@ import { subtract } from "./math/operations";
 import { PseudoPhysicsWorld } from "./physics-world/pseudo-physics-world";
 import { PapermanTorso } from "./paperman-body/torso";
 import { PapermanBody } from "./paperman-body/body";
+import { GLOBAL_DEBUG } from "./debug-config";
+import { createMuscleDebugMenu } from "./debug-muscle-menu";
 
 const canvasQuery = document.querySelector<HTMLCanvasElement>("#scene");
 if (!canvasQuery) throw new Error('Missing <canvas id="scene">');
@@ -30,7 +32,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.target.set(0, 0.25, 0);
+controls.target.set(0, 1.5, 0); // pivot point: the camera looks at and orbits around this
+controls.update();
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -42,12 +45,13 @@ const heightmap = await loadHeightmap("/heightmap2.png");
 
 const terrain = new Terrain(10, heightmap, scene, false); // Enable debug mode
 
-const body = new PapermanBody(
-    { x: 0, y: 3, z: 0 },
-    0,
-    scene,
-    true
-);
+const body = new PapermanBody({ x: 0, y: 3, z: 0 }, 0, scene, true);
+
+const controllableMuscles = body.getControllableMuscles();
+
+if (GLOBAL_DEBUG) {
+    createMuscleDebugMenu(controllableMuscles);
+}
 
 const physicsWorld = new PseudoPhysicsWorld(
     terrain,

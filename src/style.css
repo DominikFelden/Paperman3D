@@ -65,6 +65,27 @@ body {
     font-size: 13px;
 }
 
+#muscle-debug-menu {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 13px;
+}
+
+#muscle-debug-menu button {
+    cursor: pointer;
+    min-width: 28px;
+}
+
 #debug-controls input {
     width: 56px;
 }

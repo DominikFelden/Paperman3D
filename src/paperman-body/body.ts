@@ -1,4 +1,7 @@
 import type { Vector } from "../math/operations";
+import type { PapermanCompoundMuscle } from "../physics-world/compoundMuscle";
+import type { PapermanMuscle } from "../physics-world/muscle";
+import type { PapermanBone } from "../physics-world/bone";
 import { getZeroVelocityParticle } from "../physics-world/particle";
 import { defaultBodyData } from "./body-default-data";
 import { PapermanHead } from "./head";
@@ -48,5 +51,11 @@ export class PapermanBody {
 
     getMuscles() {
         return this.head.getMuscles();
+    }
+
+    // this should return all the muscles which should be exposed to external control
+    // this can be either single muscles or summarized compound muscles
+    getControllableMuscles(): (PapermanCompoundMuscle | PapermanMuscle)[] {
+        return this.head.getControlledMuscles();
     }
 }
