@@ -57,6 +57,15 @@ export class Particle {
         }
     }
 
+    // moves the particle without giving it any velocity (setPosition would turn the jump into velocity)
+    teleportTo(position: Vector) {
+        this.position = { ...position };
+        this.lastPosition = { ...position };
+        if (this.mesh) {
+            this.mesh.position.set(position.x, position.y, position.z);
+        }
+    }
+
     private recordTrailPoint(point: Vector, velocity: Vector) {
         const marker = new THREE.Mesh(trailMarkerGeometry, trailMarkerMaterial);
         marker.position.set(point.x, point.y, point.z);

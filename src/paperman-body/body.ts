@@ -1,4 +1,4 @@
-import type { Vector } from "../math/operations";
+import { add, type Vector } from "../math/operations";
 import { PapermanMuscle } from "../physics-world/muscle";
 import { PapermanCompoundMuscle } from "../physics-world/compoundMuscle";
 import type { PapermanBone } from "../physics-world/bone";
@@ -110,6 +110,19 @@ export class PapermanBody {
             this.headToTorsoMuscles[2],
             this.headToTorsoMuscles[3],
         ]);
+        // do this at the very end of the constructor to ensure all particles are positioned correctly
+        this.setPosition(this.anchorPoint);
+    }
+
+    // moves the whole body by the given offset, without adding velocity
+    setPosition(position: Vector) {
+        for (const particle of this.getParticles()) {
+            particle.teleportTo(add(particle.position, position));
+        }
+        // bone/muscle debug meshes only follow the particles when updated
+        for (const bone of [...this.getBones(), ...this.getMuscles()]) {
+            bone.updateMesh();
+        }
     }
 
     getParticles() {

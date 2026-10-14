@@ -68,6 +68,11 @@ export class PapermanBone {
         this.particle1.setPosition(add(this.particle1.position, scaleVector(norm, -correction)));
         this.particle2.setPosition(add(this.particle2.position, scaleVector(norm, correction)));
 
+        this.updateMesh();
+    }
+
+    // syncs the debug mesh with the current particle positions
+    updateMesh(): void {
         // there is only a mesh in debug mode
         // if not debug mode all the following will be skipped
         if (!this.mesh) return;

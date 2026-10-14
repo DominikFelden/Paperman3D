@@ -45,7 +45,7 @@ const heightmap = await loadHeightmap("/heightmap2.png");
 
 const terrain = new Terrain(10, heightmap, scene, false); // Enable debug mode
 
-const body = new PapermanBody({ x: 0, y: 3, z: 0 }, 0, scene, true);
+const body = new PapermanBody({ x: 0, y: 1, z: 0 }, 0, scene, true);
 
 const controllableMuscles = body.getControllableMuscles();
 
