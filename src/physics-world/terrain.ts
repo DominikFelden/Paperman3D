@@ -9,7 +9,9 @@ export class Terrain {
     width: number;
     hightLookup: Map<string, number> = new Map(); // "terrainX-terrainY" → world Y height; key format must match renderTerrain vertex lookup
     allTriangles: Triangle[] = [];
-    closeSurfaceTriangles: Map<string, Triangle[]> = new Map(); // spatial hash "worldX-worldZ" → triangles; buckets by integer XZ for proximity search
+    closeSurfaceTriangles: Map<number, Triangle[]> = new Map(); // spatial hash cellKey(cellX, cellZ) → triangles; buckets by the cell of the first vertex
+    private triangleExtent = 0; // largest XZ distance from a triangle's first vertex to its other vertices
+    private cellSize = 1; // world size of one spatial-hash bucket (= triangleExtent)
     scaling: number; // world units per one heightmap cell
     decimalPlaces: number; // key precision: enough digits so one cell step is never rounded away
     // Precomputed constants — set once in the constructor, reused on every detectPointBelowTerrain call.
@@ -60,7 +62,7 @@ export class Terrain {
         return this.hightLookup;
     }
 
-    // Files every world-space triangle into closeSurfaceTriangles under the integer (worldX, worldZ) bucket of its first vertex.
+    // Files every world-space triangle into closeSurfaceTriangles under the bucket of its first vertex.
     createTriangleHashMap(groundMesh: THREE.Mesh) {
         const position = groundMesh.geometry.attributes.position;
         const index = groundMesh.geometry.index;
@@ -111,14 +113,38 @@ export class Terrain {
                 triangle.normal.y *= -1;
                 triangle.normal.z *= -1;
             }
-            // create a key for every square unit of the terrain and add the triangle to the corresponding key, so we can later quickly find all triangles that are close to a given point
-            const key = `${v1.x.toFixed(0)}-${v1.z.toFixed(0)}`;
-            if (!this.closeSurfaceTriangles.has(key)) {
-                this.closeSurfaceTriangles.set(key, []);
-            }
-            this.closeSurfaceTriangles.get(key)!.push(triangle);
+            // the triangle is filed into its bucket in the second pass below, once the bucket size is known
+            this.triangleExtent = Math.max(
+                this.triangleExtent,
+                Math.abs(triangle.edge1.x),
+                Math.abs(triangle.edge1.z),
+                Math.abs(triangle.edge2.x),
+                Math.abs(triangle.edge2.z),
+            );
             this.allTriangles.push(triangle);
         }
+
+        // Bucket size = largest triangle extent, so a triangle never reaches further than one bucket
+        // away from the bucket of its first vertex. Needs all triangles first, hence the second pass.
+        this.cellSize = this.triangleExtent > 0 ? this.triangleExtent : 1;
+        for (const triangle of this.allTriangles) {
+            const key = this.cellKeyAt(triangle.ankerPoint.x, triangle.ankerPoint.z);
+            let bucket = this.closeSurfaceTriangles.get(key);
+            if (!bucket) {
+                bucket = [];
+                this.closeSurfaceTriangles.set(key, bucket);
+            }
+            bucket.push(triangle);
+        }
+    }
+
+    // numeric spatial-hash key for a cell index pair; avoids building a string per lookup (valid for |cz| < 32768)
+    private static cellKey(cx: number, cz: number): number {
+        return cx * 65536 + cz;
+    }
+
+    private cellKeyAt(x: number, z: number): number {
+        return Terrain.cellKey(Math.floor(x / this.cellSize), Math.floor(z / this.cellSize));
     }
 
     renderTerrain(scene: THREE.Scene, debug = false): THREE.Mesh {
@@ -154,23 +180,15 @@ export class Terrain {
         linePoint: Vector,
         lineDirection: Vector,
     ): { point: Vector; triangle: Triangle } | null {
-        const candidateTriangles = new Set<Triangle>();
-
-        // closeSurfaceTriangles keys are "{worldX}-{worldZ}" with integer precision.
-        // Search a neighbourhood of cells around the line point to gather candidates.
-        const searchRadius = Math.ceil(this.scaling) + 10;
-        const cx = Math.round(linePoint.x);
-        const cy = Math.round(linePoint.z);
-
-        for (let dx = -searchRadius; dx <= searchRadius; dx++) {
-            for (let dy = -searchRadius; dy <= searchRadius; dy++) {
-                const key = `${cx + dx}-${cy + dy}`;
-                const tris = this.closeSurfaceTriangles.get(key);
-                if (tris) {
-                    for (const tri of tris) candidateTriangles.add(tri);
-                }
-            }
-        }
+        // Only triangles near the segment (linePoint → linePoint + lineDirection) can be hit, so gather the
+        // buckets covering its XZ bounding box, widened by one bucket (a triangle reaches at most one bucket
+        // away from the bucket of its first vertex). Each triangle lives in exactly one bucket, so there are no duplicates.
+        const endX = linePoint.x + lineDirection.x;
+        const endZ = linePoint.z + lineDirection.z;
+        const minCx = Math.floor(Math.min(linePoint.x, endX) / this.cellSize) - 1;
+        const maxCx = Math.floor(Math.max(linePoint.x, endX) / this.cellSize) + 1;
+        const minCz = Math.floor(Math.min(linePoint.z, endZ) / this.cellSize) - 1;
+        const maxCz = Math.floor(Math.max(linePoint.z, endZ) / this.cellSize) + 1;
 
         let closestPoint: Vector | null = null;
         let closestTriangle: Triangle | null = null;
@@ -182,18 +200,23 @@ export class Terrain {
         const segmentLenSq = skalarprodukt(lineDirection, lineDirection);
         const eps = 1e-9;
 
-        for (const triangle of candidateTriangles) {
-            const pt = calculateIntersectionTriangleLine(triangle, linePoint, lineDirection);
-            if (pt) {
-                const ex = pt.x - linePoint.x;
-                const ey = pt.y - linePoint.y;
-                const ez = pt.z - linePoint.z;
-                const distSq = ex * ex + ey * ey + ez * ez;
-                if (distSq > segmentLenSq + eps) continue; // beyond this step's displacement (t > 1)
-                if (distSq < closestDistSq) {
-                    closestDistSq = distSq;
-                    closestPoint = pt;
-                    closestTriangle = triangle;
+        for (let cx = minCx; cx <= maxCx; cx++) {
+            for (let cz = minCz; cz <= maxCz; cz++) {
+                const bucket = this.closeSurfaceTriangles.get(Terrain.cellKey(cx, cz));
+                if (!bucket) continue;
+                for (const triangle of bucket) {
+                    const pt = calculateIntersectionTriangleLine(triangle, linePoint, lineDirection);
+                    if (!pt) continue;
+                    const ex = pt.x - linePoint.x;
+                    const ey = pt.y - linePoint.y;
+                    const ez = pt.z - linePoint.z;
+                    const distSq = ex * ex + ey * ey + ez * ez;
+                    if (distSq > segmentLenSq + eps) continue; // beyond this step's displacement (t > 1)
+                    if (distSq < closestDistSq) {
+                        closestDistSq = distSq;
+                        closestPoint = pt;
+                        closestTriangle = triangle;
+                    }
                 }
             }
         }
@@ -250,7 +273,7 @@ export class Terrain {
 
     private visualizeNormals(scene: THREE.Scene): void {
         // Collect all triangles from the terrain
-        const allTriangles: Array<{ key: string; triangle: Triangle }> = [];
+        const allTriangles: Array<{ key: number; triangle: Triangle }> = [];
         for (const [key, triangles] of this.closeSurfaceTriangles) {
             for (const triangle of triangles) {
                 allTriangles.push({ key, triangle });
