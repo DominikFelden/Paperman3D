@@ -117,8 +117,10 @@ export class PseudoPhysicsWorld {
         }
 
         // debug meshes only need to follow the final positions, not every constraint iteration
-        for (const bone of this.bones) {
-            bone.updateMesh();
+        if (this.debug) {
+            for (const bone of this.bones) {
+                bone.updateMesh();
+            }
         }
     }
 
