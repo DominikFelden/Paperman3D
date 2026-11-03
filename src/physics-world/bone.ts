@@ -1,6 +1,21 @@
 import * as THREE from "three";
-import { add, magnitude, normalize, scaleVector, subtract } from "../math/operations";
+import { magnitude, subtract } from "../math/operations";
 import type { Particle } from "./particle";
+
+// reused every updateMesh call so the per-frame debug sync allocates nothing
+const yAxis = new THREE.Vector3(0, 1, 0);
+const scratchDirection = new THREE.Vector3();
+
+// one material per color, shared by all bone/muscle meshes
+const boneMaterials = new Map<number, THREE.MeshStandardMaterial>();
+function getBoneMaterial(color: number): THREE.MeshStandardMaterial {
+    let material = boneMaterials.get(color);
+    if (!material) {
+        material = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.1 });
+        boneMaterials.set(color, material);
+    }
+    return material;
+}
 
 export class PapermanBone {
     particle1: Particle;
@@ -34,11 +49,7 @@ export class PapermanBone {
             const dist = magnitude(dir);
 
             const geometry = new THREE.CylinderGeometry(0.01, 0.01, dist, 8);
-            const material = new THREE.MeshStandardMaterial({
-                color: this.colorDebugMode,
-                roughness: 0.5,
-                metalness: 0.1,
-            });
+            const material = getBoneMaterial(this.colorDebugMode);
             this.mesh = new THREE.Mesh(geometry, material);
 
             // Position at midpoint between the two particles
@@ -61,14 +72,27 @@ export class PapermanBone {
     update(): void {
         // a bone should always have constant length even if the particles move
         // so here we correct the particle positions to maintain the bone's length
-        const sub = subtract(this.particle1.position, this.particle2.position);
-        const currentLength = magnitude(sub);
-        const correction = (currentLength - this.length) / 2;
-        const norm = normalize(sub);
-        this.particle1.setPosition(add(this.particle1.position, scaleVector(norm, -correction)));
-        this.particle2.setPosition(add(this.particle2.position, scaleVector(norm, correction)));
+        // (the debug mesh is not touched here; call updateMesh() once after all constraint iterations)
+        const p1 = this.particle1.position;
+        const p2 = this.particle2.position;
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        const dz = p1.z - p2.z;
+        const currentLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (currentLength === 0) return; // no direction to correct along
 
-        this.updateMesh();
+        // moving each particle by half the error along the bone direction
+        const factor = (currentLength - this.length) / (2 * currentLength);
+        this.particle1.setPosition({
+            x: p1.x - dx * factor,
+            y: p1.y - dy * factor,
+            z: p1.z - dz * factor,
+        });
+        this.particle2.setPosition({
+            x: p2.x + dx * factor,
+            y: p2.y + dy * factor,
+            z: p2.z + dz * factor,
+        });
     }
 
     // syncs the debug mesh with the current particle positions
@@ -82,12 +106,12 @@ export class PapermanBone {
 
         this.mesh.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
 
-        const dirVec = new THREE.Vector3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-        const dist = dirVec.length();
+        scratchDirection.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+        const dist = scratchDirection.length();
         if (dist > 0) {
             this.mesh.quaternion.setFromUnitVectors(
-                new THREE.Vector3(0, 1, 0),
-                dirVec.divideScalar(dist),
+                yAxis,
+                scratchDirection.divideScalar(dist),
             );
         }
     }

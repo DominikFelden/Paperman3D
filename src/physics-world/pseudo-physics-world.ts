@@ -29,7 +29,7 @@ export class PseudoPhysicsWorld {
     private debug: boolean;
     private velocityVectors = new Map<Particle, DebugVector>(); // tracks per-particle debug arrows so they can be replaced each frame
 
-    private amountBoneUpdateLoops = 10; // Number of times to update bones per physics step
+    private amountBoneUpdateLoops = 25; // Number of times to update bones per physics step
 
     constructor(
         terrain: Terrain,
@@ -115,26 +115,32 @@ export class PseudoPhysicsWorld {
                 bone.update();
             }
         }
+
+        // debug meshes only need to follow the final positions, not every constraint iteration
+        if (this.debug) {
+            for (const bone of this.bones) {
+                bone.updateMesh();
+            }
+        }
     }
 
-    // (re)draws the debug arrow representing a particle's resulting velocity for this frame
+    // updates the debug arrow representing a particle's resulting velocity for this frame (created once, then reused)
     private updateVelocityDebugVector(particle: Particle, velocity: Vector) {
-        const existing = this.velocityVectors.get(particle);
-        if (existing) {
-            existing.removeFromScene(this.scene!);
-            existing.dispose();
-            this.velocityVectors.delete(particle);
+        let arrow = this.velocityVectors.get(particle);
+        if (!arrow) {
+            if (magnitude(velocity) < 1e-6) return; // DebugVector throws on a zero-length direction
+            // velocity magnitudes are tiny per step, so thin the arrow out to keep it legible
+            arrow = new DebugVector(particle.position, velocity, 0xffff00, {
+                cylinderRadius: 0.01,
+                lengthScale: 1,
+            });
+            arrow.addToScene(this.scene!);
+            this.velocityVectors.set(particle, arrow);
+            return;
         }
 
-        if (magnitude(velocity) < 1e-6) return; // DebugVector throws on a zero-length direction
-
-        // velocity magnitudes are tiny per step, so stretch the arrow and thin it out to keep it visible and legible
-        const arrow = new DebugVector(particle.position, velocity, 0xffff00, {
-            cylinderRadius: 0.01,
-            lengthScale: 1,
-        });
-        arrow.addToScene(this.scene!);
-        this.velocityVectors.set(particle, arrow);
+        // DebugVector hides itself when the direction is (almost) zero
+        arrow.update(particle.position, velocity);
     }
 
     controlMaxVelocity(velocity: Vector) {

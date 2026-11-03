@@ -12,6 +12,14 @@ const trailMarkerMaterial = new THREE.MeshBasicMaterial({
     opacity: 0.5,
 });
 
+// Shared by all debug particle meshes so each particle doesn't build its own geometry/material.
+const particleGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+const particleMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff6600,
+    roughness: 0.5,
+    metalness: 0.1,
+});
+
 export class Particle {
     position: Vector;
     lastPosition: Vector;
@@ -31,13 +39,7 @@ export class Particle {
         this.scene = scene;
 
         if (debug) {
-            const geometry = new THREE.SphereGeometry(0.02, 16, 16);
-            const material = new THREE.MeshStandardMaterial({
-                color: 0xff6600,
-                roughness: 0.5,
-                metalness: 0.1,
-            });
-            this.mesh = new THREE.Mesh(geometry, material);
+            this.mesh = new THREE.Mesh(particleGeometry, particleMaterial);
             this.mesh.position.set(position.x, position.y, position.z);
             scene.add(this.mesh);
         }
@@ -45,8 +47,9 @@ export class Particle {
 
     setPosition(position: Vector) {
         const previousPosition = this.position;
-        this.lastPosition = { ...this.position };
-        this.position = { ...position };
+        // position objects are replaced, never mutated, so the old one can become lastPosition without a copy
+        this.lastPosition = previousPosition;
+        this.position = { x: position.x, y: position.y, z: position.z };
         if (this.mesh) {
             this.mesh.position.set(position.x, position.y, position.z);
         }
