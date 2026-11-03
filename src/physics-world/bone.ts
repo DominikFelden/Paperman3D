@@ -82,17 +82,10 @@ export class PapermanBone {
         if (currentLength === 0) return; // no direction to correct along
 
         // moving each particle by half the error along the bone direction
+        // (correctPosition leaves lastPosition alone, so the particles keep their momentum)
         const factor = (currentLength - this.length) / (2 * currentLength);
-        this.particle1.setPosition({
-            x: p1.x - dx * factor,
-            y: p1.y - dy * factor,
-            z: p1.z - dz * factor,
-        });
-        this.particle2.setPosition({
-            x: p2.x + dx * factor,
-            y: p2.y + dy * factor,
-            z: p2.z + dz * factor,
-        });
+        this.particle1.correctPosition(-dx * factor, -dy * factor, -dz * factor);
+        this.particle2.correctPosition(dx * factor, dy * factor, dz * factor);
     }
 
     // syncs the debug mesh with the current particle positions

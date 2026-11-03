@@ -116,7 +116,11 @@ export class PseudoPhysicsWorld {
             }
         }
 
-        // debug meshes only need to follow the final positions, not every constraint iteration
+        // meshes only need to follow the final positions, not every constraint iteration
+        // (particles only have a mesh if they were created in debug mode, otherwise this is a no-op)
+        for (const particle of this.particles) {
+            particle.updateMesh();
+        }
         if (this.debug) {
             for (const bone of this.bones) {
                 bone.updateMesh();

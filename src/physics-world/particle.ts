@@ -47,7 +47,8 @@ export class Particle {
 
     setPosition(position: Vector) {
         const previousPosition = this.position;
-        // position objects are replaced, never mutated, so the old one can become lastPosition without a copy
+        // the old position object can become lastPosition without a copy: correctPosition only ever
+        // mutates the current position object, and this call replaces it with a fresh one
         this.lastPosition = previousPosition;
         this.position = { x: position.x, y: position.y, z: position.z };
         if (this.mesh) {
@@ -58,6 +59,22 @@ export class Particle {
         if (GLOBAL_DEBUG && ENABLE_TRAILS) {
             this.recordTrailPoint(previousPosition, subtract(position, previousPosition));
         }
+    }
+
+    // applies a constraint correction (e.g. from a bone) without touching lastPosition, so the particle
+    // keeps its velocity; setPosition would overwrite lastPosition and wipe out the momentum of the step.
+    // The debug mesh is not touched here; call updateMesh() once after all corrections.
+    correctPosition(dx: number, dy: number, dz: number) {
+        this.position.x += dx;
+        this.position.y += dy;
+        this.position.z += dz;
+    }
+
+    // syncs the debug mesh with the current position
+    updateMesh() {
+        // there is only a mesh in debug mode
+        if (!this.mesh) return;
+        this.mesh.position.set(this.position.x, this.position.y, this.position.z);
     }
 
     // moves the particle without giving it any velocity (setPosition would turn the jump into velocity)
