@@ -114,6 +114,9 @@ export class PseudoPhysicsWorld {
             for (const bone of this.bones) {
                 bone.update();
             }
+            // the bones can drag particles into the terrain. Enforcing the ground after every pass lets the bones
+            // adapt to it instead of fighting it, and no particle ends the step below the surface
+            this.resolveTerrainPenetrations();
         }
 
         // meshes only need to follow the final positions, not every constraint iteration
@@ -124,6 +127,18 @@ export class PseudoPhysicsWorld {
         if (this.debug) {
             for (const bone of this.bones) {
                 bone.updateMesh();
+            }
+        }
+    }
+
+    // pushes particles that ended up below the terrain surface (e.g. dragged there by the bones) straight back up
+    // onto it. Only position is corrected, lastPosition stays, so the Verlet velocity is untouched.
+    private resolveTerrainPenetrations() {
+        for (const particle of this.particles) {
+            const position = particle.position;
+            const surfaceHeight = this.terrain.getTerrainHeightAt(position.x, position.z);
+            if (position.y < surfaceHeight) {
+                particle.correctPosition(0, surfaceHeight - position.y, 0);
             }
         }
     }

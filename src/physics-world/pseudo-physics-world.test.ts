@@ -155,4 +155,49 @@ describe("PseudoPhysicsWorld bone constraints", () => {
         expect(meshA.position.toArray()).toEqual([a.position.x, a.position.y, a.position.z]);
         expect(meshB.position.toArray()).toEqual([b.position.x, b.position.y, b.position.z]);
     });
+
+    it("lets the bones adapt to the ground instead of dragging a particle through it", () => {
+        const scene = new THREE.Scene();
+        const lower = new Particle({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, scene);
+        const upper = new Particle({ x: 0, y: 1, z: 0 }, { x: 0, y: 1, z: 0 }, scene);
+        const bone = new PapermanBone(lower, upper, scene); // rest length 1
+        upper.teleportTo({ x: 0, y: 0.5, z: 0 }); // compressed, so the bone pushes the lower particle into the ground
+        const world = new PseudoPhysicsWorld(flatTerrain(), [lower, upper], [bone]);
+        world.gravityVector = { x: 0, y: 0, z: 0 };
+
+        world.step();
+
+        // the ground and the bone length must both hold, so the upper particle has to take the whole correction
+        expect(lower.position.y).toBeGreaterThanOrEqual(0);
+        expect(magnitude(subtract(upper.position, lower.position))).toBeCloseTo(bone.length, 6);
+    });
+
+    it("never ends a step inside the terrain when a braced body lands on it", () => {
+        const scene = new THREE.Scene();
+        const corners: Particle[] = [];
+        for (const x of [-0.2, 0.2]) {
+            for (const y of [0.3, 0.7]) {
+                for (const z of [-0.2, 0.2]) {
+                    corners.push(new Particle({ x, y, z }, { x, y, z }, scene));
+                }
+            }
+        }
+        const bones: PapermanBone[] = [];
+        for (let i = 0; i < corners.length; i++) {
+            for (let j = i + 1; j < corners.length; j++) {
+                bones.push(new PapermanBone(corners[i], corners[j], scene));
+            }
+        }
+        const world = new PseudoPhysicsWorld(flatTerrain(), corners, bones);
+
+        for (let step = 0; step < 100; step++) {
+            world.step();
+            for (const corner of corners) {
+                expect(corner.position.y).toBeGreaterThanOrEqual(-1e-9);
+            }
+        }
+
+        // the body really did land and rest on the ground, so the loop above checked actual contact
+        expect(Math.min(...corners.map((corner) => corner.position.y))).toBeCloseTo(0, 3);
+    });
 });
