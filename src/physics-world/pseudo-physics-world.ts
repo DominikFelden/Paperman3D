@@ -14,7 +14,7 @@ import { DebugVector } from "../debug-vector";
 
 export class PseudoPhysicsWorld {
     // physical constants
-    gravityVector = { x: 0, y: -0.00481, z: 0 }; // Gravity vector (m/s^2)
+    gravityVector = { x: 0, y: -0.000481, z: 0 }; // Gravity vector (m/s^2)
     maxVelocity = 0.1; // Maximum allowed velocity for particles (m/s)
     // objects
     terrain: Terrain;

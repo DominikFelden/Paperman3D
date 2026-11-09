@@ -111,12 +111,14 @@ export class PapermanLeg {
             ),
         ];
 
+        this.kneeMuscles.forEach((muscle) => muscle.setMinimumExtension(0.35));
+
         this.footMuscles = [
             new PapermanMuscle(
                 "footMuscleInner",
                 this.kneeInner,
                 this.footTipInner,
-                0.95,
+                0.75,
                 this.scene,
                 GLOBAL_DEBUG,
             ),
@@ -124,11 +126,13 @@ export class PapermanLeg {
                 "footMuscleOuter",
                 this.kneeOuter,
                 this.footTipOuter,
-                0.95,
+                0.75,
                 this.scene,
                 GLOBAL_DEBUG,
             ),
         ];
+
+        this.footMuscles.forEach((muscle) => muscle.setMinimumExtension(0.65));
 
         // define compound muscles
         this.kneeMuscleCompound = new PapermanCompoundMuscle(

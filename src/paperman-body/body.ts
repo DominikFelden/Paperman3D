@@ -216,6 +216,9 @@ export class PapermanBody {
             ),
         ];
 
+        this.leftThighMuscles.forEach((muscle) => muscle.setMinimumExtension(0.55));
+        this.rightThighMuscles.forEach((muscle) => muscle.setMinimumExtension(0.55));
+
         this.leftThighCompound = new PapermanCompoundMuscle("leftThigh", this.leftThighMuscles);
         this.rightThighCompound = new PapermanCompoundMuscle("rightThigh", this.rightThighMuscles);
 
