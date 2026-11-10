@@ -70,6 +70,17 @@ export class Particle {
         this.position.z += dz;
     }
 
+    // scales the Verlet velocity (position - lastPosition) without moving the particle, used when the
+    // time slice a step is simulated in changes (substeps)
+    scaleVelocity(factor: number) {
+        const { position, lastPosition } = this;
+        this.lastPosition = {
+            x: position.x - (position.x - lastPosition.x) * factor,
+            y: position.y - (position.y - lastPosition.y) * factor,
+            z: position.z - (position.z - lastPosition.z) * factor,
+        };
+    }
+
     // syncs the debug mesh with the current position
     updateMesh() {
         // there is only a mesh in debug mode

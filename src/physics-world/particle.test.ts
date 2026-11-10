@@ -32,6 +32,50 @@ describe("Particle.correctPosition", () => {
     });
 });
 
+describe("Particle.scaleVelocity", () => {
+    it("scales the velocity without moving the particle", () => {
+        const particle = new Particle(
+            { x: 1, y: 2, z: 3 },
+            { x: 0, y: 0, z: 0 },
+            new THREE.Scene(),
+        );
+
+        particle.scaleVelocity(0.5);
+
+        expect(particle.position).toEqual({ x: 1, y: 2, z: 3 });
+        expect(particle.lastPosition).toEqual({ x: 0.5, y: 1, z: 1.5 });
+    });
+
+    it("restores the original velocity when scaled back", () => {
+        const particle = new Particle(
+            { x: 1, y: 2, z: 3 },
+            { x: 0.9, y: 1.7, z: 3.1 },
+            new THREE.Scene(),
+        );
+
+        particle.scaleVelocity(1 / 3);
+        particle.scaleVelocity(3);
+
+        expect(particle.lastPosition.x).toBeCloseTo(0.9, 12);
+        expect(particle.lastPosition.y).toBeCloseTo(1.7, 12);
+        expect(particle.lastPosition.z).toBeCloseTo(3.1, 12);
+    });
+
+    it("keeps lastPosition a separate object so bone corrections cannot change the velocity afterwards", () => {
+        const particle = new Particle(
+            { x: 1, y: 0, z: 0 },
+            { x: 0, y: 0, z: 0 },
+            new THREE.Scene(),
+        );
+
+        particle.scaleVelocity(2);
+        particle.correctPosition(5, 0, 0);
+
+        expect(particle.lastPosition).toEqual({ x: -1, y: 0, z: 0 });
+        expect(particle.position).toEqual({ x: 6, y: 0, z: 0 });
+    });
+});
+
 describe("Particle.updateMesh", () => {
     it("moves the debug mesh to the current position only when asked to", () => {
         const scene = new THREE.Scene();

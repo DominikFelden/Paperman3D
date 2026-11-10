@@ -13,7 +13,7 @@ import type { PapermanBone } from "./bone";
 import { DebugVector } from "../debug-vector";
 
 export class PseudoPhysicsWorld {
-    // physical constants
+    // physical constants, all given per full step: the world scales them itself when a step is split into substeps
     gravityVector = { x: 0, y: -0.000481, z: 0 }; // Gravity vector (m/s^2)
     maxVelocity = 0.1; // Maximum allowed velocity for particles (m/s)
     // objects
@@ -29,7 +29,9 @@ export class PseudoPhysicsWorld {
     private debug: boolean;
     private velocityVectors = new Map<Particle, DebugVector>(); // tracks per-particle debug arrows so they can be replaced each frame
 
-    private amountBoneUpdateLoops = 25; // Number of times to update bones per physics step
+    // 4 substeps with 2 bone updates each keep the skeleton about as rigid as 25 bone updates in one big step did
+    amountBoneUpdateLoops = 2; // Number of times to update bones per substep
+    private substepCount = 4;
 
     constructor(
         terrain: Terrain,
@@ -45,16 +47,74 @@ export class PseudoPhysicsWorld {
         this.debug = debug;
     }
 
+    // Number of shorter time slices every step is simulated in (whole number >= 1). The bones stay much
+    // more rigid with several substeps and few bone updates each than with the same number of bone
+    // updates in one big step, because the particles move less between two constraint passes.
+    get substeps(): number {
+        return this.substepCount;
+    }
+
+    set substeps(value: number) {
+        if (!Number.isInteger(value) || value < 1) {
+            throw new Error(`Substeps must be a whole number >= 1, provided value is ${value}`);
+        }
+        this.substepCount = value;
+    }
+
     step() {
         // if(this.debug) console.log('\n New Step:')
-        // Update particle positions based on their velocities and collisions
-        for (const particle of this.particles) {
-            const oldPosition = particle.position;
+        const substeps = this.substeps;
+        // A step is simulated as `substeps` shorter time slices (h = 1 / substeps). Displacements scale with h,
+        // accelerations with h², and the friction damping has to compound back to the per-step value
+        const substepGravity = scaleVector(this.gravityVector, 1 / (substeps * substeps));
+        const substepMaxVelocity = this.maxVelocity / substeps;
+        const substepFriction = 1 - Math.pow(1 - this.friction, 1 / substeps);
 
+        // between steps the velocity (position - lastPosition) is stored per full step, so it doesn't depend on the
+        // number of substeps; inside the step it has to be per substep
+        this.scaleParticleVelocities(1 / substeps);
+        for (let i = 0; i < substeps; i++) {
+            this.integrateParticles(substepGravity, substepMaxVelocity, substepFriction);
+            this.solveConstraints();
+        }
+        this.scaleParticleVelocities(substeps);
+
+        if (this.debug && this.scene) {
+            for (const particle of this.particles) {
+                this.updateVelocityDebugVector(
+                    particle,
+                    subtract(particle.position, particle.lastPosition),
+                );
+            }
+        }
+
+        // meshes only need to follow the final positions, not every constraint iteration
+        // (particles only have a mesh if they were created in debug mode, otherwise this is a no-op)
+        for (const particle of this.particles) {
+            particle.updateMesh();
+        }
+        if (this.debug) {
+            for (const bone of this.bones) {
+                bone.updateMesh();
+            }
+        }
+    }
+
+    // scales the velocity of every particle without moving any of them
+    private scaleParticleVelocities(factor: number) {
+        if (factor === 1) return;
+        for (const particle of this.particles) {
+            particle.scaleVelocity(factor);
+        }
+    }
+
+    // Update particle positions based on their velocities and collisions
+    private integrateParticles(gravity: Vector, maxVelocity: number, friction: number) {
+        for (const particle of this.particles) {
             // Simple physics integration (e.g., Euler method)
             const velocity = subtract(particle.position, particle.lastPosition);
-            let fullDisplacement = add(velocity, this.gravityVector);
-            fullDisplacement = this.controlMaxVelocity(fullDisplacement);
+            let fullDisplacement = add(velocity, gravity);
+            fullDisplacement = this.controlMaxVelocity(fullDisplacement, maxVelocity);
 
             // if(this.debug) console.log(`Full displacement for particle: ${JSON.stringify(fullDisplacement)} and Full displacement magnitude: ${magnitude(fullDisplacement)}`)
 
@@ -81,7 +141,7 @@ export class PseudoPhysicsWorld {
                     );
                     newPosition = add(
                         intersection.point,
-                        scaleVector(projectedRemainingDisplacement, 1 - this.friction),
+                        scaleVector(projectedRemainingDisplacement, 1 - friction),
                     );
                 } else {
                     if (this.debug) console.log(`Falling back to horizontal displacement`);
@@ -94,40 +154,25 @@ export class PseudoPhysicsWorld {
                     };
                     newPosition = add(
                         particle.position,
-                        scaleVector(horizontalDisplacement, 1 - this.friction),
+                        scaleVector(horizontalDisplacement, 1 - friction),
                     );
                     newPosition.y = this.terrain.getTerrainHeightAt(newPosition.x, newPosition.z);
                 }
             }
 
             particle.setPosition(newPosition);
-
-            // if(this.debug ) console.log(`Particle moved from ${JSON.stringify(oldPosition)} to ${JSON.stringify(newPosition)}`)
-
-            if (this.debug && this.scene) {
-                this.updateVelocityDebugVector(particle, subtract(particle.position, oldPosition));
-            }
         }
+    }
 
-        // now that all particle positions have been updated for this step we still need to update all the bones
+    // pulls the bones back to their length. After every pass the ground is enforced again: the bones can drag
+    // particles into the terrain, and this lets them adapt to it instead of fighting it, so no particle
+    // ends a substep below the surface
+    private solveConstraints() {
         for (let i = 0; i < this.amountBoneUpdateLoops; i++) {
             for (const bone of this.bones) {
                 bone.update();
             }
-            // the bones can drag particles into the terrain. Enforcing the ground after every pass lets the bones
-            // adapt to it instead of fighting it, and no particle ends the step below the surface
             this.resolveTerrainPenetrations();
-        }
-
-        // meshes only need to follow the final positions, not every constraint iteration
-        // (particles only have a mesh if they were created in debug mode, otherwise this is a no-op)
-        for (const particle of this.particles) {
-            particle.updateMesh();
-        }
-        if (this.debug) {
-            for (const bone of this.bones) {
-                bone.updateMesh();
-            }
         }
     }
 
@@ -162,13 +207,13 @@ export class PseudoPhysicsWorld {
         arrow.update(particle.position, velocity);
     }
 
-    controlMaxVelocity(velocity: Vector) {
-        if (velocity.x > this.maxVelocity) velocity.x = this.maxVelocity;
-        if (velocity.y > this.maxVelocity) velocity.y = this.maxVelocity;
-        if (velocity.z > this.maxVelocity) velocity.z = this.maxVelocity;
-        if (velocity.x < -this.maxVelocity) velocity.x = -this.maxVelocity;
-        if (velocity.y < -this.maxVelocity) velocity.y = -this.maxVelocity;
-        if (velocity.z < -this.maxVelocity) velocity.z = -this.maxVelocity;
+    controlMaxVelocity(velocity: Vector, maxVelocity: number = this.maxVelocity) {
+        if (velocity.x > maxVelocity) velocity.x = maxVelocity;
+        if (velocity.y > maxVelocity) velocity.y = maxVelocity;
+        if (velocity.z > maxVelocity) velocity.z = maxVelocity;
+        if (velocity.x < -maxVelocity) velocity.x = -maxVelocity;
+        if (velocity.y < -maxVelocity) velocity.y = -maxVelocity;
+        if (velocity.z < -maxVelocity) velocity.z = -maxVelocity;
         return velocity;
     }
 }
