@@ -27,6 +27,9 @@ export class PapermanBone {
         return 0x44aaff;
     }
 
+    // TODO: test the effect of different overrelaxation factors on convergence speed and stability
+    private overrelaxationFactor = 1.2; // This should speed up Gauss-Seidel convergence
+
     constructor(
         particle1: Particle,
         particle2: Particle,
@@ -81,9 +84,10 @@ export class PapermanBone {
         const currentLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (currentLength === 0) return; // no direction to correct along
 
-        // moving each particle by half the error along the bone direction
+        // moving each particle by half the error time overrelaxation along the bone direction
         // (correctPosition leaves lastPosition alone, so the particles keep their momentum)
-        const factor = (currentLength - this.length) / (2 * currentLength);
+        const factor =
+            ((currentLength - this.length) * this.overrelaxationFactor) / (2 * currentLength);
         this.particle1.correctPosition(-dx * factor, -dy * factor, -dz * factor);
         this.particle2.correctPosition(dx * factor, dy * factor, dz * factor);
     }
@@ -102,10 +106,7 @@ export class PapermanBone {
         scratchDirection.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
         const dist = scratchDirection.length();
         if (dist > 0) {
-            this.mesh.quaternion.setFromUnitVectors(
-                yAxis,
-                scratchDirection.divideScalar(dist),
-            );
+            this.mesh.quaternion.setFromUnitVectors(yAxis, scratchDirection.divideScalar(dist));
         }
     }
 }
