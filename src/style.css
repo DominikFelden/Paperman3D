@@ -93,3 +93,64 @@ body {
 #debug-controls button {
     cursor: pointer;
 }
+
+#debug-controls,
+#muscle-debug-menu {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+#muscle-debug-menu button,
+#muscle-debug-menu select,
+#debug-controls button,
+#debug-controls input {
+    -webkit-touch-callout: none;
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+    #debug-controls,
+    #muscle-debug-menu {
+        left: 8px;
+        right: 8px;
+        padding: 8px;
+        font-size: 16px; /* prevents iOS zoom on focus */
+    }
+
+    #debug-controls {
+        bottom: 8px;
+    }
+
+    #muscle-debug-menu {
+        bottom: 80px;
+    }
+
+    #debug-controls button,
+    #debug-controls input,
+    #muscle-debug-menu button,
+    #muscle-debug-menu select {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    #debug-controls button,
+    #muscle-debug-menu button {
+        min-width: 44px;
+        padding: 0 12px;
+    }
+
+    #debug-controls input {
+        width: 64px;
+        box-sizing: border-box;
+    }
+
+    #debug-controls button {
+        flex: 1;
+    }
+
+    #muscle-debug-menu select {
+        flex: 1;
+        min-width: 0;
+    }
+}
