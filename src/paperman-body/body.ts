@@ -10,6 +10,7 @@ import { PapermanTorso } from "./torso";
 import * as THREE from "three";
 import { stabalize } from "./utils";
 import { PapermanLeg } from "./leg";
+import { PapermanArm } from "./arm";
 
 export class PapermanBody {
     anchorPoint: Vector;
@@ -18,6 +19,8 @@ export class PapermanBody {
     torso: PapermanTorso;
     leftLeg: PapermanLeg;
     rightLeg: PapermanLeg;
+    leftArm: PapermanArm;
+    rightArm: PapermanArm;
     headToTorsoStabalizers: PapermanBone[];
     headToTorsoMuscles: PapermanMuscle[];
     headTorsoMuscleMain: PapermanCompoundMuscle;
@@ -74,6 +77,19 @@ export class PapermanBody {
             "leg-right",
             this.torso.hipRightOuter,
             this.torso.hipRightInner,
+            scene,
+        );
+
+        this.leftArm = new PapermanArm(
+            true,
+            this.torso.leftShoulderUpper,
+            this.torso.leftShoulderLower,
+            scene,
+        );
+        this.rightArm = new PapermanArm(
+            false,
+            this.torso.rightShoulderUpper,
+            this.torso.rightShoulderLower,
             scene,
         );
 
@@ -243,6 +259,8 @@ export class PapermanBody {
             ...this.torso.getParticles(),
             ...this.leftLeg.getParticles(),
             ...this.rightLeg.getParticles(),
+            ...this.leftArm.getParticles(),
+            ...this.rightArm.getParticles(),
             this.thighMuscleAnchorLeft,
             this.thighMuscleAnchorRight,
         ];
